@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cineplex Match Flow</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800;900&family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* --- GLOBAL RESET & UTILS --- */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Poppins', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #121212; 
+        }
+        
+        .hidden { display: none !important; }
+
+        /* --- SHARED CONTAINER STYLES --- */
+        .phone-screen {
+            width: 375px;
+            height: 812px;
+            border-radius: 40px;
+            position: relative;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        /* --- SCREEN 1: SWIPE --- */
+        #screen-swipe {
+            background: linear-gradient(to bottom, #fcf0f3, #f6f7f9);
+            padding: 15px;
+            font-family: 'Montserrat', sans-serif;
+        }
+        .tinder-card {
+            background: white;
+            width: 100%;
+            border-radius: 20px;
+            overflow: visible;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.08);
+            position: relative;
+            flex-grow: 1;
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+        .image-container {
+            position: relative;
+            width: 100%;
+            height: 75%;
+            border-top-left-radius: 20px;
+            border-top-right-radius: 20px;
+            overflow: hidden;
+        }
+        .profile-img { width: 100%; height: 100%; object-fit: cover; }
+        .down-arrow-btn {
+            position: absolute; bottom: -25px; right: 20px; width: 50px; height: 50px;
+            background: white; border-radius: 50%; display: flex; justify-content: center;
+            align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.1); z-index: 10;
+            font-size: 24px; color: #d1d5db; cursor: pointer;
+        }
+        .profile-info {
+            padding: 20px 25px; padding-top: 15px; background: white;
+            border-bottom-left-radius: 20px; border-bottom-right-radius: 20px; flex-grow: 1;
+        }
+        .name-age { font-size: 28px; font-weight: 800; color: #222; margin-bottom: 8px; display: flex; align-items: baseline; }
+        .age { font-size: 24px; font-weight: 600; margin-left: 8px; color: #444; }
+        .info-row { display: flex; align-items: center; margin-bottom: 12px; color: #7c7c7c; font-weight: 600; font-size: 15px; }
+        .mutual-friends-row { display: flex; align-items: center; margin-top: 15px; }
+        .friend-circles { display: flex; margin-right: 10px; }
+        .friend-circle {
+            width: 24px; height: 24px; border-radius: 50%; border: 2px solid white;
+            font-size: 10px; font-weight: 700; color: white; display: flex;
+            justify-content: center; align-items: center; margin-left: -8px;
+        }
+        .friend-circle:first-child { margin-left: 0; }
+        .fc-blue { background-color: #6ba6ff; z-index: 3;}
+        .fc-green { background-color: #4ade80; z-index: 2; }
+        .friends-text { color: #a3a3a3; font-size: 14px; font-weight: 600; }
+        .bottom-controls { display: flex; justify-content: space-evenly; align-items: center; padding-bottom: 15px; }
+        .control-btn {
+            width: 65px; height: 65px; border-radius: 50%; background: white; border: none;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.08); display: flex; justify-content: center;
+            align-items: center; font-size: 32px; cursor: pointer; transition: transform 0.1s ease;
+        }
+        .control-btn:active { transform: scale(0.95); }
+        .btn-close { color: #fd5068; }
+        .btn-like { color: #1fd1a7; }
+
+        /* --- SHARED GREEN SCREENS --- */
+        .green-theme {
+            background: linear-gradient(180deg, #4ADE80 0%, #15803d 100%);
+            color: white;
+            padding: 30px 25px;
+            align-items: center;
+        }
+
+        /* --- SCREEN 2: MATCH --- */
+        #screen-match { justify-content: center; }
+        .profile-container-match {
+            display: flex; justify-content: center; align-items: center; margin-bottom: 15px;
+            position: relative; height: 120px;
+        }
+        .profile-img-wrapper {
+            width: 140px; height: 140px; border-radius: 50%; border: 5px solid white;
+            overflow: hidden; position: relative; background-color: #ccc;
+        }
+        .profile-img-wrapper img { width: 100%; height: 100%; object-fit: cover; }
+        .profile-1 { z-index: 2; margin-right: -30px; }
+        .profile-2 { z-index: 1; }
+        .its-a {
+            font-size: 20px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px;
+            margin-bottom: -3px; text-shadow: 0 2px 4px rgba(0,0,0,0.3); position: relative; z-index: 3; text-align: center; width: 100%;
+        }
+        .match-text {
+            font-size: 76px; font-weight: 900; font-style: italic; color: white;
+            text-shadow: 0 1px 0 #ccc, 0 5px 10px rgba(0,0,0,.25); margin-bottom: 5px;
+            line-height: 1; transform: rotate(-3deg); text-align: center;
+        }
+        .matched-with { font-size: 18px; font-weight: 600; margin-bottom: 40px; text-shadow: 0 2px 4px rgba(0,0,0,0.3); text-align: center; }
+        .cineplex-banner {
+            background: white; width: 100%; padding: 12px 20px; border-radius: 25px;
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 20px; box-shadow: 0 6px 0px #f1c40f; color: #0c2461; cursor: pointer;
+        }
+        .cineplex-banner:active { transform: translateY(2px); box-shadow: 0 2px 0px #f1c40f; }
+        .banner-logo { height: 35px; width: auto; display: block; }
+        .banner-text { display: flex; flex-direction: column; text-align: left; flex: 1; margin-left: 15px; }
+        .invite-text { font-weight: 800; font-size: 16px; line-height: 1.2; }
+        .offer-text { font-weight: 800; font-size: 14px; color: #f1c40f; line-height: 1.2; }
+        .input-container {
+            width: 100%; background: white; border-radius: 30px; padding: 5px 5px 5px 20px;
+            display: flex; align-items: center; margin-bottom: 20px; height: 55px;
+        }
+        .message-input { flex-grow: 1; border: none; outline: none; font-size: 16px; color: #333; background: transparent; }
+        .send-btn-small { background: none; border: none; color: #2563eb; font-weight: 800; font-size: 16px; padding: 10px 15px; cursor: pointer; }
+        .reactions-container { display: flex; justify-content: center; gap: 15px; width: 100%; }
+        .reaction-btn {
+            width: 60px; height: 60px; border-radius: 50%; border: none; background-color: rgba(3, 53, 40, 0.5);
+            font-size: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: white;
+        }
+
+        /* --- SCREEN 3: PLAN --- */
+        #screen-plan { padding-top: 40px; overflow-y: auto; display: block; }
+        .header { text-align: center; margin-bottom: 30px; }
+        .header h1 { font-size: 32px; font-weight: 800; text-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .section { margin-bottom: 30px; }
+        .section-title { font-size: 18px; font-weight: 600; margin-bottom: 15px; display: block; }
+        .genre-grid { display: flex; flex-wrap: wrap; gap: 10px; }
+        input[type="checkbox"], input[type="radio"] { display: none; }
+        .choice-btn {
+            background: rgba(255, 255, 255, 0.2); border: 2px solid rgba(255, 255, 255, 0.3);
+            padding: 10px 20px; border-radius: 25px; font-size: 14px; cursor: pointer;
+            transition: all 0.2s ease; text-align: center; user-select: none; display: inline-block;
+        }
+        .choice-btn:hover { background: rgba(255, 255, 255, 0.3); }
+        input:checked + .choice-btn {
+            background: white; color: #15803d; font-weight: 600; border-color: white;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15); transform: translateY(-2px);
+        }
+        
+        /* UPDATED: Days Grid to fit 7 items */
+        .days-grid { display: flex; justify-content: space-between; gap: 5px; }
+        .day-btn { width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; border-radius: 50%; padding: 0; font-size: 12px; }
+
+        .time-grid { display: flex; flex-direction: column; gap: 10px; }
+        .time-btn { width: 100%; padding: 15px; display: flex; justify-content: space-between; align-items: center; }
+        .submit-container { margin-top: 20px; padding-bottom: 40px; }
+        .action-btn {
+            width: 100%; background-color: #0c2461; color: #f1c40f; border: none;
+            padding: 18px; border-radius: 30px; font-size: 18px; font-weight: 800;
+            cursor: pointer; box-shadow: 0 10px 20px rgba(12, 36, 97, 0.3);
+            transition: transform 0.1s; display: block; text-align: center;
+        }
+        .action-btn:active { transform: scale(0.98); }
+
+        /* --- SCREEN 4: RESULT --- */
+        #screen-result { text-align: center; padding-top: 40px; }
+        .match-header { margin-bottom: 25px; }
+        .match-header h2 { font-size: 20px; font-weight: 600; opacity: 0.9; margin-bottom: 5px; }
+        .match-header h1 { font-size: 28px; font-weight: 800; line-height: 1.2; }
+        .movie-card {
+            background: rgba(255, 255, 255, 0.2); border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 30px; padding: 25px; width: 100%; margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+        }
+        .movie-poster-img {
+            width: 150px; height: 220px; border-radius: 12px; margin: 0 auto 20px auto;
+            display: block; box-shadow: 0 10px 25px rgba(0,0,0,0.3); object-fit: cover;
+        }
+        .movie-title { font-size: 22px; font-weight: 800; margin-bottom: 8px; line-height: 1.1; }
+        .movie-genre { font-size: 14px; opacity: 0.9; background: rgba(0,0,0,0.2); padding: 5px 12px; border-radius: 15px; display: inline-block; }
+        .details-container { width: 100%; text-align: left; margin-bottom: auto; }
+        .detail-row {
+            display: flex; align-items: center; margin-bottom: 15px; background: rgba(0,0,0,0.1);
+            padding: 12px 15px; border-radius: 20px;
+        }
+        .icon-box {
+            width: 40px; height: 40px; background: white; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px; margin-right: 15px; color: #15803d; flex-shrink: 0;
+        }
+        .info-text { display: flex; flex-direction: column; }
+        .info-label { font-size: 11px; opacity: 0.8; text-transform: uppercase; letter-spacing: 1px; }
+        .info-value { font-size: 15px; font-weight: 600; }
+
+    </style>
+</head>
+<body>
+
+    <div id="screen-swipe" class="phone-screen">
+        <div class="tinder-card">
+            <div class="image-container">
+                <img id="card-img" src="" alt="Profile" class="profile-img">
+                
+            </div>
+            <div class="profile-info">
+                <div class="name-age">
+                    <span id="card-name">Name</span>, <span id="card-age" class="age">00</span>
+                </div>
+                <div class="info-row">
+                    <span id="card-job">Job Title</span>
+                </div>
+                
+            </div>
+        </div>
+        <div class="bottom-controls">
+            <button class="control-btn btn-close" onclick="swipeLeft()">✕</button>
+            <button class="control-btn btn-like" onclick="swipeRight()">❤</button>
+        </div>
+    </div>
+
+    <div id="screen-match" class="phone-screen green-theme hidden">
+        <div class="profile-container-match">
+            <div class="profile-img-wrapper profile-1">
+                <img src="cat.jpg" alt="Me">
+            </div>
+            <div class="profile-img-wrapper profile-2">
+                <img id="match-img" src="" alt="Match">
+            </div>
+        </div>
+
+        <h2 class="its-a">IT'S A</h2>
+        <h1 class="match-text">Match</h1>
+        <p class="matched-with">You matched with <span id="match-name">Someone</span></p>
+
+        <div class="cineplex-banner" onclick="goToPlan()">
+            <div class="banner-logo-container">
+                <img src="logo.svg.png" alt="Cineplex" class="banner-logo">
+            </div>
+            <div class="banner-text">
+                <span class="invite-text">Invite <span id="match-name-banner">them</span>!</span>
+                <span class="offer-text">50% OFF CONCESSIONS</span>
+            </div>
+        </div>
+
+        <div class="input-container">
+            <input type="text" class="message-input" placeholder="Say something nice">
+            <button class="send-btn-small">SEND</button>
+        </div>
+
+        <div class="reactions-container">
+            <button class="reaction-btn">👋</button>
+            <button class="reaction-btn">😉</button>
+            <button class="reaction-btn">❤️</button>
+            <button class="reaction-btn">😍</button>
+        </div>
+    </div>
+
+    <div id="screen-plan" class="phone-screen green-theme hidden">
+        <div class="header">
+            <h1>Set the Vibe</h1>
+        </div>
+
+        <div class="section">
+            <label class="section-title">Favorite Genre</label>
+            <div class="genre-grid">
+                <input type="radio" id="romance" name="genre" value="Romance">
+                <label for="romance" class="choice-btn">💘 Romance</label>
+
+                <input type="radio" id="horror" name="genre" value="Horror">
+                <label for="horror" class="choice-btn">👻 Horror</label>
+
+                <input type="radio" id="scifi" name="genre" value="Sci-Fi">
+                <label for="scifi" class="choice-btn">👽 Sci-Fi</label>
+
+                <input type="radio" id="comedy" name="genre" value="Comedy" checked>
+                <label for="comedy" class="choice-btn">😂 Comedy</label>
+
+                <input type="radio" id="action" name="genre" value="Action">
+                <label for="action" class="choice-btn">💥 Action</label>
+
+                <input type="radio" id="drama" name="genre" value="Drama">
+                <label for="drama" class="choice-btn">🎭 Drama</label>
+            </div>
+        </div>
+
+        <div class="section">
+            <label class="section-title">When are you available?</label>
+            <div class="days-grid">
+                <input type="radio" id="sun" name="day" value="Sunday">
+                <label for="sun" class="choice-btn day-btn">S</label>
+
+                <input type="radio" id="mon" name="day" value="Monday">
+                <label for="mon" class="choice-btn day-btn">M</label>
+
+                <input type="radio" id="tue" name="day" value="Tuesday">
+                <label for="tue" class="choice-btn day-btn">T</label>
+
+                <input type="radio" id="wed" name="day" value="Wednesday">
+                <label for="wed" class="choice-btn day-btn">W</label>
+
+                <input type="radio" id="thu" name="day" value="Thursday">
+                <label for="thu" class="choice-btn day-btn">T</label>
+
+                <input type="radio" id="fri" name="day" value="Friday" checked>
+                <label for="fri" class="choice-btn day-btn">F</label>
+
+                <input type="radio" id="sat" name="day" value="Saturday">
+                <label for="sat" class="choice-btn day-btn">S</label>
+            </div>
+        </div>
+
+        <div class="section">
+            <label class="section-title">What time of day?</label>
+            <div class="time-grid">
+                <input type="radio" id="morning" name="time" value="Morning">
+                <label for="morning" class="choice-btn time-btn">
+                    <span>Morning</span>
+                    <span>☀️</span>
+                </label>
+
+                <input type="radio" id="afternoon" name="time" value="Afternoon">
+                <label for="afternoon" class="choice-btn time-btn">
+                    <span>Afternoon</span>
+                    <span>⛅</span>
+                </label>
+
+                <input type="radio" id="evening" name="time" value="Evening" checked>
+                <label for="evening" class="choice-btn time-btn">
+                    <span>Evening</span>
+                    <span>🌙</span>
+                </label>
+            </div>
+        </div>
+
+        <div class="submit-container">
+            <button class="action-btn" onclick="findTickets()">Find Tickets</button>
+        </div>
+    </div>
+
+    <div id="screen-result" class="phone-screen green-theme hidden">
+        <div class="match-header">
+            <h1>You and <span id="result-match-name"></span> <br> both want to see...</h1>
+        </div>
+
+        <div class="movie-card">
+            <img id="result-poster" src="" alt="Poster" class="movie-poster-img">
+            <div id="result-title" class="movie-title">Movie Title</div>
+            <div id="result-genre" class="movie-genre">Genre</div>
+        </div>
+
+        <div class="details-container">
+            <div class="detail-row">
+                <div class="icon-box">⏰</div>
+                <div class="info-text">
+                    <span class="info-label">Showtime</span>
+                    <span id="result-time" class="info-value">Friday • 7:30 PM</span>
+                </div>
+            </div>
+
+            <div class="detail-row">
+                <div class="icon-box">📍</div>
+                <div class="info-text">
+                    <span class="info-label">Location</span>
+                    <span class="info-value">Cineplex Odeon Waterloo</span>
+                </div>
+            </div>
+        </div>
+
+        <button class="action-btn" onclick="alert('Tickets Purchased! Enjoy your date.')">
+            Purchase Tickets
+        </button>
+    </div>
+
+    <script>
+        // --- DATA ---
+        const profiles = [
+            { name: "Sarah", age: 24, job: "Designer", img: "./monkey1.jpeg" },
+            { name: "Jessica", age: 22, job: "Student", img: "./monkey2.png" },
+            { name: "Emily", age: 26, job: "Nurse", img: "./monkey3.webp" },
+            { name: "Michael", age: 28, job: "Developer", img: "./mouse.jpg" },
+            { name: "David", age: 25, job: "Chef", img: "./person1.webp" },
+            { name: "Sophia", age: 23, job: "Artist", img: "./person2.jpeg" },
+            { name: "Daniel", age: 27, job: "Engineer", img: "./dog.jpeg" },
+            { name: "Olivia", age: 24, job: "Teacher", img: "./cat1.jpg" },
+        ];
+
+        const movies = [
+            { title: "The Notebook", genre: "Romance", poster: "notebook.jpg" },
+            { title: "La La Land", genre: "Romance", poster: "lalaland.jpg" },
+            { title: "The Conjuring", genre: "Horror", poster: "theconjuring.jpg" },
+            { title: "It", genre: "Horror", poster: "it.jpg" },
+            { title: "Interstellar", genre: "Sci-Fi", poster: "interstellar.jpg" },
+            { title: "Dune", genre: "Sci-Fi", poster: "dune.jpeg" },
+            { title: "Superbad", genre: "Comedy", poster: "superbad.jpg" },
+            { title: "Cat in the Hat", genre: "Comedy", poster: "catinhat.jpg" },
+            { title: "John Wick", genre: "Action", poster: "johnwick.jpg" },
+            { title: "The Dark Knight", genre: "Action", poster: "thedarkknight.jpg" }
+        ];
+
+        // --- STATE ---
+        let currentProfileIndex = 0;
+        let matchedProfile = null;
+
+        // --- FUNCTIONS ---
+        
+        // Initialize First Screen
+        function loadProfile() {
+            if(currentProfileIndex >= profiles.length) {
+                alert("No more profiles!");
+                currentProfileIndex = 0; // Restart
+            }
+            const p = profiles[currentProfileIndex];
+            document.getElementById('card-img').src = p.img;
+            document.getElementById('card-name').textContent = p.name;
+            document.getElementById('card-age').textContent = p.age;
+            document.getElementById('card-job').textContent = p.job;
+        }
+
+        // Swipe Left (Reject)
+        function swipeLeft() {
+            currentProfileIndex++;
+            loadProfile();
+        }
+
+        // Swipe Right (Match)
+        function swipeRight() {
+            matchedProfile = profiles[currentProfileIndex];
+            
+            // Populate Match Screen Data
+            document.getElementById('match-img').src = matchedProfile.img;
+            document.getElementById('match-name').textContent = matchedProfile.name;
+            document.getElementById('match-name-banner').textContent = matchedProfile.name;
+            document.getElementById('result-match-name').textContent = matchedProfile.name;
+
+            // Switch Screen
+            switchScreen('screen-swipe', 'screen-match');
+        }
+
+        // Go from Match -> Plan
+        function goToPlan() {
+            switchScreen('screen-match', 'screen-plan');
+        }
+
+        // Go from Plan -> Result
+        function findTickets() {
+            // Get selected genre
+            const genres = document.getElementsByName('genre');
+            let selectedGenre = 'Comedy'; // Default
+            for(let g of genres) {
+                if(g.checked) selectedGenre = g.value;
+            }
+
+            // Get selected day
+            const days = document.getElementsByName('day');
+            let selectedDay = 'Friday';
+            for(let d of days) if(d.checked) selectedDay = d.value;
+
+            // Get selected time
+            const times = document.getElementsByName('time');
+            let selectedTime = 'Evening';
+            for(let t of times) if(t.checked) selectedTime = t.value;
+
+            // Filter Movie
+            let recommended = movies.find(m => m.genre === selectedGenre) || movies[0];
+
+            // Populate Result Screen
+            document.getElementById('result-poster').src = recommended.poster;
+            document.getElementById('result-title').textContent = recommended.title;
+            document.getElementById('result-genre').textContent = recommended.genre;
+            document.getElementById('result-time').textContent = `${selectedDay} • ${selectedTime}`;
+
+            switchScreen('screen-plan', 'screen-result');
+        }
+
+        // Helper to toggle screens
+        function switchScreen(fromId, toId) {
+            document.getElementById(fromId).classList.add('hidden');
+            document.getElementById(toId).classList.remove('hidden');
+        }
+
+        // Run on load
+        loadProfile();
+
+    </script>
+</body>
+</html>
